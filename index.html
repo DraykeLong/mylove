@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>星空爱情之旅</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #000428, #004e92);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            color: white;
+            perspective: 1000px;
+        }
+        
+        .container {
+            position: relative;
+            width: 100%;
+            max-width: 1200px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            overflow: hidden;
+        }
+        
+        /* 星空背景 */
+        .starry-sky {
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            background: 
+                radial-gradient(circle at 10% 20%, rgba(255,255,255,0.2) 0.5px, transparent 1px),
+                radial-gradient(circle at 80% 40%, rgba(255,255,255,0.15) 0.5px, transparent 1px),
+                radial-gradient(circle at 30% 70%, rgba(255,255,255,0.1) 0.5px, transparent 1px),
+                radial-gradient(circle at 60% 10%, rgba(255,255,255,0.25) 0.5px, transparent 1px);
+            background-size: 100px 100px;
+            animation: rotateSky 300s linear infinite;
+            transform-style: preserve-3d;
+            z-index: 1;
+        }
+        
+        .galaxy {
+            position: absolute;
+            width: 800px;
+            height: 800px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(106, 13, 173, 0.2) 0%, transparent 70%);
+            filter: blur(50px);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 2;
+            animation: pulseGlow 8s ease-in-out infinite;
+        }
+        
+        /* 星座容器 */
+        .constellations {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            z-index: 20;
+        }
+        
+        .constellation {
+            position: absolute;
+            cursor: pointer;
+            transition: all 0.5s ease;
+            filter: drop-shadow(0 0 10px rgba(255, 0, 127, 0.5));
+            z-index: 25;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px;
+            border-radius: 50%;
+        }
+        
+        .constellation i {
+            font-size: 3rem;
+            color: #ff7eb3;
+            transition: all 0.3s ease;
+            display: block;
+            position: relative;
+            z-index: 30;
+        }
+        
+        .constellation:hover i {
+            transform: scale(1.2);
+            color: #ff007f;
+            filter: drop-shadow(0 0 15px rgba(255, 0, 127, 0.8));
+        }
+        
+        .constellation-label {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            white-space: nowrap;
+            top: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        
+        .constellation:hover .constellation-label {
+            opacity: 1;
+        }
+        
+        .constellation-tip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            color: yellow;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            white-space: nowrap;
+            top: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        
+        .constellation:hover .constellation-tip {
+            opacity: 1;
+        }
+        
+        /* 收集的元素 */
+        .collected-elements {
+            position: absolute;
+            bottom: 20px;
+            display: flex;
+            gap: 15px;
+            z-index: 25;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 15px;
+            border-radius: 50px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .element {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 1.5rem;
+            transition: all 0.5s ease;
+        }
+        
+        .element.collected {
+            background: rgba(106, 13, 173, 0.3);
+            border: 2px solid #ff007f;
+            color: #ff7eb3;
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(255, 0, 127, 0.5);
+        }
+        
+        /* 标题和说明 */
+        .title-container {
+            position: absolute;
+            top: 10%;
+            text-align: center;
+            z-index: 15;
+            max-width: 80%;
+        }
+        
+        .main-title {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            text-shadow: 0 0 20px rgba(255, 0, 127, 0.8);
+            background: linear-gradient(45deg, #ff007f, #ff6b9d, #9c27b0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+            letter-spacing: 2px;
+        }
+        
+        .instructions {
+            font-size: 1.4rem;
+            color: #ffb6c1;
+            max-width: 600px;
+            line-height: 1.6;
+            text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+        
+        /* 主界面 */
+        .main-interface {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 30;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 1.5s ease-in-out;
+        }
+        
+        .love-container {
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 20px;
+            padding: 40px;
+            width: 90%;
+            max-width: 700px;
+            text-align: center;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 50px rgba(255, 0, 127, 0.3);
+            transform: scale(0.8);
+            transition: all 1s ease;
+        }
+        
+        .love-title {
+            font-size: 3rem;
+            margin-bottom: 30px;
+            color: #ff7eb3;
+        }
+        
+        .love-message {
+            font-size: 1.8rem;
+            line-height: 1.8;
+            color: #ffd3e0;
+            margin: 30px 0;
+            font-weight: 500;
+            font-style: italic;
+            text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+        }
+        
+        .signature {
+            font-size: 2rem;
+            text-align: center;
+            margin-top: 30px;
+            color: #ff7eb3;
+            font-weight: bold;
+        }
+        
+        .controls {
+            margin-top: 40px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            width: 100%;
+        }
+        
+        .custom-input {
+            padding: 15px 25px;
+            border-radius: 50px;
+            border: 2px solid #ff6b9d;
+            width: 300px;
+            font-size: 1.2rem;
+            outline: none;
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            transition: all 0.3s;
+        }
+        
+        .custom-input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .custom-input:focus {
+            border-color: #ff007f;
+            box-shadow: 0 0 20px rgba(255, 0, 127, 0.5);
+            background: rgba(255, 255, 255, 0.25);
+        }
+        
+        .btn {
+            padding: 15px 40px;
+            border-radius: 50px;
+            border: none;
+            background: linear-gradient(135deg, #ff007f, #9c27b0);
+            color: white;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 5px 20px rgba(156, 39, 176, 0.5);
+        }
+        
+        .btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(156, 39, 176, 0.7);
+        }
+        
+        .btn:active {
+            transform: translateY(2px);
+        }
+        
+        /* 粒子效果 */
+        .particles {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 5;
+        }
+        
+        .particle {
+            position: absolute;
+            pointer-events: none;
+            border-radius: 50%;
+            z-index: 15;
+            opacity: 0;
+        }
+        
+        /* 动画效果 */
+        @keyframes rotateSky {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @keyframes pulseGlow {
+            0% { opacity: 0.3; transform: translate(-50%, -50%) scale(0.9); }
+            50% { opacity: 0.6; transform: translate(-50%, -50%) scale(1.1); }
+            100% { opacity: 0.3; transform: translate(-50%, -50%) scale(0.9); }
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(10deg); }
+            100% { transform: translateY(0) rotate(0deg); }
+        }
+        
+        @keyframes scaleIn {
+            0% { transform: scale(0); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .main-title { font-size: 2.5rem; }
+            .instructions { font-size: 1.1rem; }
+            .love-title { font-size: 2.2rem; }
+            .love-message { font-size: 1.4rem; }
+            .custom-input { width: 100%; max-width: 300px; }
+            .constellation i { font-size: 2rem; }
+            .element { width: 40px; height: 40px; font-size: 1.2rem; }
+            .constellation-tip { font-size: 0.8rem; }
+        }
+        
+        @media (max-width: 480px) {
+            .main-title { font-size: 2rem; }
+            .love-message { font-size: 1.2rem; }
+            .controls { flex-direction: column; align-items: center; }
+            .love-container { padding: 20px; }
+            .collected-elements { gap: 8px; padding: 10px; }
+            .element { width: 35px; height: 35px; }
+            .constellation-tip { top: 50px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="starry-sky"></div>
+    <div class="galaxy"></div>
+    <div class="particles" id="particles"></div>
+    
+    <div class="container">
+        <!-- 标题和说明 -->
+        <div class="title-container">
+            <h1 class="main-title">星空爱情之旅</h1>
+            <p class="instructions">亲爱的，请探索星空中的爱情星座，收集5个爱情元素，解锁我对你的告白</p>
+        </div>
+        
+        <!-- 星座 -->
+        <div class="constellations" id="constellations">
+            <!-- 星座通过JS动态添加 -->
+        </div>
+        
+        <!-- 收集的元素 -->
+        <div class="collected-elements">
+            <div class="element" id="element1"><i class="fas fa-heart"></i></div>
+            <div class="element" id="element2"><i class="fas fa-ring"></i></div>
+            <div class="element" id="element3"><i class="fas fa-heart-crack" style="transform: rotate(45deg);"></i></div>
+            <div class="element" id="element4"><i class="fas fa-envelope"></i></div>
+            <div class="element" id="element5"><i class="fas fa-cake"></i></div>
+        </div>
+        
+        <!-- 主界面 -->
+        <div class="main-interface" id="mainInterface">
+            <div class="love-container">
+                <h2 class="love-title"><i class="fas fa-heart"></i> 给最爱的你 <i class="fas fa-heart"></i></h2>
+                <p class="love-message" id="loveMessage">
+                    亲爱的，你是我生命中最美的星辰。从相遇的那一刻起，你就点亮了我的整个世界。感谢你成为我的妻子，我的爱人，我最好的朋友。我会永远爱你、珍惜你、守护你，就像宇宙守护着星辰大海。
+                </p>
+                <div class="signature" id="signature">永远爱你的老公</div>
+                
+                <!-- 移除了输入框和按钮 -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const constellations = document.getElementById('constellations');
+            const particlesContainer = document.getElementById('particles');
+            const mainInterface = document.getElementById('mainInterface');
+            const loveContainer = document.querySelector('.love-container');
+            
+            // 星座数据
+            const constellationData = [
+                { id: 1, icon: 'fa-heart', label: '永恒之心', x: 15, y: 30, tip: '点击我！' },
+                { id: 2, icon: 'fa-ring', label: '承诺之戒', x: 80, y: 20, tip: '点击我！' },
+                { id: 3, icon: 'fa-heart-crack', label: '浪漫玫瑰', x: 40, y: 40, tip: '点击我！', rotate: '45deg' },
+                { id: 4, icon: 'fa-envelope', label: '甜蜜情书', x: 70, y: 60, tip: '点击我！' },
+                { id: 5, icon: 'fa-cake', label: '幸福蛋糕', x: 50, y: 80, tip: '点击我！' }
+            ];
+            
+            // 已收集的元素
+            let collectedElements = 0;
+            const totalElements = 5;
+            
+            // 创建星座
+            function createConstellations() {
+                constellationData.forEach(star => {
+                    const constellation = document.createElement('div');
+                    constellation.className = 'constellation';
+                    constellation.style.left = `${star.x}%`;
+                    constellation.style.top = `${star.y}%`;
+                    constellation.dataset.id = star.id;
+                    constellation.style.transform = 'scale(0)';
+                    
+                    // 为玫瑰添加特殊样式
+                    if (star.id === 3) {
+                        constellation.style.border = '2px solid rgba(255, 255, 255, 0.5)';
+                        constellation.style.padding = '15px';
+                        constellation.style.zIndex = '28';
+                    }
+                    
+                    const icon = document.createElement('i');
+                    icon.className = `fas ${star.icon}`;
+                    
+                    // 为玫瑰添加旋转效果
+                    if (star.rotate) {
+                        icon.style.transform = `rotate(${star.rotate})`;
+                    }
+                    
+                    const label = document.createElement('div');
+                    label.className = 'constellation-label';
+                    label.textContent = star.label;
+                    
+                    // 添加点击提示
+                    const tip = document.createElement('div');
+                    tip.className = 'constellation-tip';
+                    tip.textContent = star.tip;
+                    
+                    constellation.appendChild(icon);
+                    constellation.appendChild(label);
+                    constellation.appendChild(tip);
+                    constellations.appendChild(constellation);
+                    
+                    // 添加动画延迟
+                    setTimeout(() => {
+                        constellation.style.transition = 'transform 1s ease-out, opacity 1s ease-out';
+                        constellation.style.transform = 'scale(1)';
+                        constellation.style.opacity = '1';
+                        
+                        // 添加浮动动画
+                        constellation.style.animation = 'float 4s ease-in-out infinite';
+                        constellation.style.animationDelay = `${Math.random() * 2}s`;
+                    }, 500 + star.id * 300);
+                    
+                    // 点击事件
+                    constellation.addEventListener('click', () => {
+                        if (constellation.classList.contains('collected')) return;
+                        
+                        // 点击时添加额外的视觉反馈
+                        if (star.id === 3) {
+                            console.log("玫瑰被点击了!");
+                            icon.style.color = 'red';
+                            setTimeout(() => {
+                                icon.style.color = '#ff007f';
+                            }, 500);
+                        }
+                        
+                        constellation.classList.add('collected');
+                        collectElement(star.id);
+                    });
+                });
+            }
+            
+            // 收集元素
+            function collectElement(id) {
+                // 标记元素为已收集
+                const element = document.getElementById(`element${id}`);
+                element.classList.add('collected');
+                
+                // 创建粒子效果
+                createStarParticles(id);
+                
+                collectedElements++;
+                
+                // 显示已收集数量
+                console.log(`已收集 ${collectedElements}/${totalElements} 个元素`);
+                
+                // 检查是否收集完所有元素
+                if (collectedElements === totalElements) {
+                    setTimeout(showMainInterface, 1500);
+                }
+            }
+            
+            // 创建星星粒子
+            function createStarParticles(id) {
+                const star = document.querySelector(`.constellation[data-id="${id}"]`);
+                const rect = star.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+                
+                const targetElement = document.getElementById(`element${id}`);
+                const targetRect = targetElement.getBoundingClientRect();
+                const targetX = targetRect.left + targetRect.width / 2;
+                const targetY = targetRect.top + targetRect.height / 2;
+                
+                const particleCount = 30;
+                
+                for (let i = 0; i < particleCount; i++) {
+                    const particle = document.createElement('div');
+                    particle.classList.add('particle');
+                    
+                    // 随机大小和颜色
+                    const size = Math.random() * 8 + 4;
+                    particle.style.width = `${size}px`;
+                    particle.style.height = `${size}px`;
+                    
+                    // 根据元素类型设置不同颜色
+                    let color;
+                    switch(id) {
+                        case 1: color = '#ff007f'; break; // 心形 - 粉色
+                        case 2: color = '#ffd700'; break; // 戒指 - 金色
+                        case 3: color = '#e91e63'; break; // 玫瑰 - 玫瑰红
+                        case 4: color = '#4fc3f7'; break; // 情书 - 天蓝色
+                        case 5: color = '#ff9800'; break; // 蛋糕 - 橙色
+                        default: color = '#ff7eb3';
+                    }
+                    particle.style.background = `radial-gradient(circle, ${color}, ${color}00)`;
+                    
+                    // 初始位置
+                    particle.style.left = `${centerX}px`;
+                    particle.style.top = `${centerY}px`;
+                    
+                    particlesContainer.appendChild(particle);
+                    
+                    // 动画
+                    const angle = Math.random() * Math.PI * 2;
+                    const radius = Math.random() * 100 + 50;
+                    const delay = Math.random() * 300;
+                    
+                    // 粒子飞散然后汇聚的动画
+                    const keyframes = [
+                        { 
+                            transform: `translate(0, 0) scale(1)`,
+                            opacity: 1 
+                        },
+                        { 
+                            transform: `translate(${Math.cos(angle) * radius}px, ${Math.sin(angle) * radius}px) scale(0.5)`,
+                            opacity: 0.7,
+                            offset: 0.5
+                        },
+                        { 
+                            transform: `translate(${targetX - centerX}px, ${targetY - centerY}px) scale(0.1)`,
+                            opacity: 0
+                        }
+                    ];
+                    
+                    const animation = particle.animate(keyframes, {
+                        duration: 1500,
+                        easing: 'cubic-bezier(0.215, 0.61, 0.355, 1)',
+                        delay: delay
+                    });
+                    
+                    animation.onfinish = () => particle.remove();
+                }
+            }
+            
+            // 显示主界面
+            function showMainInterface() {
+                // 隐藏星座
+                constellations.style.opacity = '0';
+                constellations.style.pointerEvents = 'none';
+                
+                // 显示主界面
+                mainInterface.style.opacity = '1';
+                mainInterface.style.pointerEvents = 'all';
+                
+                // 添加容器动画
+                setTimeout(() => {
+                    loveContainer.style.transform = 'scale(1)';
+                }, 100);
+                
+                // 创建背景粒子效果
+                createBackgroundParticles();
+            }
+            
+            // 创建背景粒子效果
+            function createBackgroundParticles() {
+                const particleCount = 200;
+                
+                for (let i = 0; i < particleCount; i++) {
+                    const particle = document.createElement('div');
+                    particle.classList.add('particle');
+                    
+                    // 随机大小和位置
+                    const size = Math.random() * 6 + 2;
+                    particle.style.width = `${size}px`;
+                    particle.style.height = `${size}px`;
+                    particle.style.left = `${Math.random() * 100}%`;
+                    particle.style.top = `${Math.random() * 100}%`;
+                    
+                    // 随机颜色
+                    const colors = ['#ff007f', '#ff6b9d', '#9c27b0', '#ff7eb3', '#e91e63'];
+                    particle.style.background = colors[Math.floor(Math.random() * colors.length)];
+                    
+                    particlesContainer.appendChild(particle);
+                    
+                    // 浮动动画
+                    const animation = particle.animate(
+                        [
+                            { transform: 'translateY(0) rotate(0deg)', opacity: 0.8 },
+                            { transform: `translateY(${Math.random() * 100 - 50}px) rotate(${Math.random() * 360}deg)`, opacity: 0.2 }
+                        ], 
+                        {
+                            duration: Math.random() * 5000 + 3000,
+                            iterations: Infinity,
+                            direction: 'alternate',
+                            easing: 'ease-in-out'
+                        }
+                    );
+                }
+            }
+            
+            // 初始化
+            createConstellations();
+            
+            // 调试信息
+            console.log('星空爱情之旅 - 点击提示已添加到所有星座');
+        });
+    </script>
+</body>
+</html>    
